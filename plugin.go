@@ -9,9 +9,9 @@ import (
 const name = "sample_plugin"
 
 type Configurer interface {
-	// UnmarshalKey takes a single key and unmarshals it into a Struct.
+	// UnmarshalKey takes a single key and unmarshal it into a Struct.
 	//
-	// func (h *HttpService) Init(cp config.Configurer) error {
+	// func (h *HttpService) Init(cp config.Configurator) error {
 	//     h.config := &HttpConfig{}
 	//     if err := configProvider.UnmarshalKey("http", h.config); err != nil {
 	//         return err
@@ -19,7 +19,7 @@ type Configurer interface {
 	// }
 	UnmarshalKey(name string, out interface{}) error
 
-	// Unmarshal unmarshal the config into a Struct. Make sure that the tags
+	// Unmarshal the config into a Struct. Make sure that the tags
 	// on the fields of the structure are properly set.
 	Unmarshal(out interface{}) error
 
@@ -39,28 +39,30 @@ type Configurer interface {
 	RRVersion() string
 }
 
+type Logger interface {
+	NamedLogger(name string) *zap.Logger
+}
+
 type Plugin struct {
 	log *zap.Logger
 	cfg *Config
 }
 
-func (p *Plugin) Init(cfg Configurer, log *zap.Logger) error {
+func (p *Plugin) Init(cfg Configurer, logger Logger) error {
 	const op = errors.Op("my_plugin_init")
 
 	if !cfg.Has(name) {
 		return errors.E(errors.Disabled)
 	}
 
-	p.cfg = &Config{}
-	err := cfg.UnmarshalKey(name, p.cfg)
+	err := cfg.UnmarshalKey(name, &p.cfg)
 	if err != nil {
 		return errors.E(op, err)
 	}
 
 	p.cfg.InitDefaults()
 
-	p.log = new(zap.Logger)
-	*p.log = *log
+	p.log = logger.NamedLogger(name)
 
 	return nil
 }
@@ -73,4 +75,8 @@ func (p *Plugin) Serve() chan error {
 
 func (p *Plugin) Stop() error {
 	return nil
+}
+
+func (p *Plugin) Name() string {
+	return name
 }
