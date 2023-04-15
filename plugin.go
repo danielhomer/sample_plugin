@@ -64,6 +64,9 @@ func (p *Plugin) Init(cfg Configurer, logger Logger) error {
 
 	p.log = logger.NamedLogger(name)
 
+	p.log.Info("HELLO FROM INIT!")
+	p.log.Info(p.cfg.keySample)
+
 	return nil
 }
 
