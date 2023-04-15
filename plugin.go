@@ -70,6 +70,9 @@ func (p *Plugin) Init(cfg Configurer, logger Logger) error {
 func (p *Plugin) Serve() chan error {
 	errCh := make(chan error, 1)
 
+	p.log.Info("HELLO FROM SERVE!")
+	p.log.Info(p.cfg.keySample)
+
 	return errCh
 }
 
